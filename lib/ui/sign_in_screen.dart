@@ -1,6 +1,7 @@
 import 'package:chat_app/ui/chat_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 class SignInScreen extends StatefulWidget {
   @override
@@ -19,6 +20,21 @@ class _SignInScreenState extends State<SignInScreen> {
   final FocusNode _passwordNode = FocusNode();
   //state
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    //cek user
+    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+      final User user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        Navigator.pushAndRemoveUntil(context,
+            MaterialPageRoute(builder: (BuildContext context) {
+          return ChatScreen();
+        }), (route) => false);
+      }
+    });
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -91,11 +107,17 @@ class _SignInScreenState extends State<SignInScreen> {
     final String password = _passwordController.text;
 
     try {
+      setState(() {
+        _isLoading = true;
+      });
       final UserCredential credential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+      setState(() {
+        _isLoading = false;
+      });
       if (credential != null) {
         Navigator.pushAndRemoveUntil(context,
             MaterialPageRoute(builder: (BuildContext context) {
@@ -104,6 +126,9 @@ class _SignInScreenState extends State<SignInScreen> {
       }
       print(credential);
     } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
       print(e);
     }
   }
