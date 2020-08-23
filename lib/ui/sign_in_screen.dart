@@ -1,3 +1,5 @@
+import 'package:chat_app/ui/chat_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -6,6 +8,29 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+  // controllers textField
+  final TextEditingController _emailController =
+      TextEditingController(text: 'awal@gmail.com');
+  final TextEditingController _passwordController =
+      TextEditingController(text: 'awal123');
+
+  // focusnode
+  final FocusNode _emailNode = FocusNode();
+  final FocusNode _passwordNode = FocusNode();
+  //state
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+
+    _emailNode.dispose();
+    _passwordNode.dispose();
+
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,6 +51,7 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
             ),
             TextField(
+              controller: _emailController,
               decoration: InputDecoration(hintText: 'Masukan Email'),
             ),
             SizedBox(
@@ -38,6 +64,7 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
             ),
             TextField(
+              controller: _passwordController,
               obscureText: true,
               decoration: InputDecoration(
                 hintText: 'Masukan kata sandi',
@@ -49,7 +76,7 @@ class _SignInScreenState extends State<SignInScreen> {
             Align(
               alignment: Alignment.center,
               child: RaisedButton(
-                onPressed: () {},
+                onPressed: _isLoading ? null : _onSignIn,
                 child: Text('Masuk'),
               ),
             ),
@@ -57,5 +84,27 @@ class _SignInScreenState extends State<SignInScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _onSignIn() async {
+    final String email = _emailController.text;
+    final String password = _passwordController.text;
+
+    try {
+      final UserCredential credential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      if (credential != null) {
+        Navigator.pushAndRemoveUntil(context,
+            MaterialPageRoute(builder: (BuildContext context) {
+          return ChatScreen();
+        }), (route) => false);
+      }
+      print(credential);
+    } catch (e) {
+      print(e);
+    }
   }
 }
